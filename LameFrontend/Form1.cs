@@ -294,7 +294,7 @@ namespace OggencFrontend
                 {
                     if (!cbr)
                     {
-                        option += String.Format(" -abr {0}", bitrate);
+                        option += String.Format(" --abr {0}", bitrate);
                     }
                     else
                     {
