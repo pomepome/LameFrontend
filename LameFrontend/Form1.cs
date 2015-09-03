@@ -12,6 +12,7 @@ using CSCore.Codecs;
 using CSCore.MediaFoundation;
 using NVorbis.NAudioSupport;
 using NAudio.Wave;
+using System.Collections.Generic;
 
 namespace OggencFrontend
 {
@@ -24,8 +25,9 @@ namespace OggencFrontend
         int level, samplingRate;
         ushort priority;
         double bitrate, volume;
+        string runDir;
 
-        string runDir; 
+        string[] formats;
 
         public Form1()
         {
@@ -33,6 +35,7 @@ namespace OggencFrontend
             AddOwnedForm(setting);
             setting.setMainForm(this);
             openAudio.Filter = "Supported Formats(*.wav *.ogg *.ogx *.oga *.flac *.aac *.m4a *.wma)|*.wav;*.ogg;*.ogx;*.oga;*.flac;*.aac;*.m4a;*.wma|Wave audio(*.wav)|*.wav|Ogg Volbis Audio(*.ogg,*.ogx,*.oga)|*.ogg;*.ogx;*.oga|Free Lossless Audio(*.flac)|*.flac|Advanced Audio Codec(*.aac,*.m4a)|*.aac;*.m4a|Windows Media Audio(*.wma)|*.wma";
+            formats = new string[] { ".wav", ".ogg", ".ogx", ".oga", ".flac", ".aac", ".m4a", ".wma" };
         }
 
         public void setSettings(bool is_Bitrate,bool use_tag,int lev,int sampling_rate,double bit_rate,bool useSamplingRate,double volume,string lame,bool useCbr,ushort cpuPriority,bool use_priority)
@@ -124,6 +127,18 @@ namespace OggencFrontend
             s.Save();
         }
 
+        private bool isSuportedFormat(string path)
+        {
+            foreach(string format in formats)
+            {
+                if(Path.GetExtension(path) == format)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void openAudio_FileOk(object sender, CancelEventArgs e)
         {
             string[] pathes = openAudio.FileNames;
@@ -179,6 +194,49 @@ namespace OggencFrontend
 
             return false;
         }
+
+        private void listBox1_DragEnter(object sender, DragEventArgs e)
+        {
+            bool flag = false;
+            IDataObject dataObj = e.Data;
+            if (dataObj.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] paths = (string[])dataObj.GetData(DataFormats.FileDrop);
+                foreach(string path in paths)
+                {
+                    if(isSuportedFormat(path))
+                    {
+                        flag = true;
+                    }
+                }
+            }
+            e.Effect = flag ? DragDropEffects.Copy : DragDropEffects.None;
+        }
+
+        private void listBox1_DragDrop(object sender, DragEventArgs e)
+        {
+            IDataObject dataObj = e.Data;
+            if(dataObj.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] paths = (string[])dataObj.GetData(DataFormats.FileDrop);
+                foreach (string path in paths)
+                {
+                    if (isSuportedFormat(path))
+                    {
+                        listBox1.Items.Add(path);
+                    }
+                }
+            }
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            while (listBox1.SelectedIndex > -1)
+            {
+                listBox1.Items.RemoveAt(listBox1.SelectedIndex);
+            }
+        }
+
         private string addQuotation(object src)
         {
             char q = '\"';
